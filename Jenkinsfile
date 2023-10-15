@@ -21,12 +21,35 @@ pipeline {
                 sh 'mvn clean compile'
             }
         }
-        stage('Test') {
+//         stage('Test') {
+//             steps {
+//                 sh 'mvn test'
+//             }
+//        }
+
+        stage('Package') {
             steps {
-                sh 'mvn test'
+                sh 'mvn package -DskipsTests'
             }
        }
+       stage('Build Docker Image') {
+           steps {
+                script{
+                    dockerImage = docker.build("sunilkumarbs05/currency-exchange-devops:$env.BUILD_TAG")
+                }
+           }
+      }
 
+      stage('Push Docker Image') {
+         steps {
+              script{
+                docker.withRegistry('','dockerhub') {
+                    dockerImage.push();
+                    dockerImage.push('latest')
+                }
+              }
+         }
+      }
     }
 
 }
